@@ -1,0 +1,22 @@
+{
+  "name": "web-dev-9-service-platform",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "client": "dead-server ./dist --host=localhost --port=4409",
+    "server": "nodemon ./dist",
+    "ts": "tsc --watch",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Gintaras",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "dead-server": "^1.0.9",
+    "nodemon": "^3.1.14",
+    "typescript": "^5.9.3"
+  }
+}
