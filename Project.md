@@ -4,71 +4,79 @@
 
 ### Base structure for all pages:
 
--   Header (logo + nav:)
-    -   if user is not logged in: Home, Register, Login
-    -   if user is logged in: Home, Account, Logout
--   CUSTOM MAIN CONTENT
--   Footer
+- Header (logo + nav:)
+  - if user is not logged in: Home, Register, Login
+  - if user is logged in: Home, Account, Logout
+- CUSTOM MAIN CONTENT
+- Footer
 
 ### Home page
 
--   basic home page content
--   all user's public services
+- basic home page content
+- all user's public services
+  - render on: server vs client ?
+  - random 6 services
+
+### Services page
+
+- all services
+  - list ordered by: name (az / za), price (09 / 90)
+  - default: price 09
 
 ### 404
 
--   basic 404 page content
+- basic 404 page content
 
 ### Register page
 
--   Form: name, email, password
--   fetch()
--   basic validation
+- Form: name, email, password
+- fetch()
+- basic validation
 
 ### Login page
 
--   Form: email, password
--   fetch()
--   basic validation
+- Form: email, password
+- fetch()
+- basic validation
 
 ### Logout page
 
--   button for logout action (confirmation)
+- button for logout action (confirmation)
 
 ### Account page
 
--   my services list:
-    -   service name
-    -   price
-    -   toggle
-    -   edit
-    -   delete
--   create new
+- my services list:
+  - service name
+  - price
+  - toggle
+  - edit
+  - delete
+- create new
 
 ### Account: create service page
 
--   form
+- form
 
 ### Account: update service page
 
--   form
+- form
 
 ## SERVER LOGIC
 
 ### Registration API
 
--   super strict validation
--   save into JSON
+- super strict validation
+- save into JSON
 
 ### Login API
 
--   super strict validation
+- super strict validation
 
 ### User Service API
 
--   get list
--   get single service info
--   create single service
--   update single service
--   delete single service
--   toggle single service visibility (disable/enable)
+- get list
+- get single service info
+- create single service
+- update single service
+- delete single service
+- toggle single service visibility (disable/enable)
