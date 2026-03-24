@@ -83,11 +83,18 @@ export const serverLogic = async (
       }
     }
     if (isAPI) {
-      console.log(`Uzklausa: ${trimmedPath} => isAPI`);
       buffer += stringDecoder.end();
       const gotData = buffer ? JSON.parse(buffer) : {};
-      console.log(`gotData:`, gotData);
-      responseContent = 'API REACTION ...';
+      const [err, msg] = await file.create(
+        'users',
+        gotData.email + '.json',
+        gotData,
+      );
+      if (err) {
+        responseContent = msg.toString();
+      } else {
+        responseContent = `User ${gotData.name} created.`;
+      }
     }
     if (isPage) {
       responseContent = 'HTML file ...';
