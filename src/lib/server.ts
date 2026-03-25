@@ -1,7 +1,9 @@
 import http, { IncomingMessage, ServerResponse } from 'node:http';
 import { file } from './file.js';
 import { StringDecoder } from 'node:string_decoder';
-
+import { PageHome } from '../pages/PageHome.js';
+import { Page404 } from '../pages/Page404.js';
+import { PageRegister } from '../pages/PageRegister.js';
 export const serverLogic = async (
   req: IncomingMessage,
   res: ServerResponse,
@@ -96,31 +98,44 @@ export const serverLogic = async (
         responseContent = `User ${gotData.name} created.`;
       }
     }
+    // if (isPage) {
+    //   responseContent = 'HTML file ...';
+    //   if (trimmedPath) {
+    //     const [err, msg] = await file.readPublic(trimmedPath + '.html');
+    //     if (err) {
+    //       res.statusCode = 404;
+    //       console.log(`Error reading ${trimmedPath} file ...`);
+    //     } else {
+    //       res.writeHead(200, {
+    //         'Content-Type': MIMES.html,
+    //       });
+    //       responseContent = msg;
+    //     }
+    //   } else {
+    //     const [err, msg] = await file.readPublic('index.html');
+    //     if (err) {
+    //       res.statusCode = 404;
+    //       console.log(`Error reading ${trimmedPath} file ...`);
+    //     } else {
+    //       res.writeHead(200, {
+    //         'Content-Type': MIMES.html,
+    //       });
+    //       responseContent = msg;
+    //     }
+    //   }
+    // }
+
     if (isPage) {
-      responseContent = 'HTML file ...';
-      if (trimmedPath) {
-        const [err, msg] = await file.readPublic(trimmedPath + '.html');
-        if (err) {
-          res.statusCode = 404;
-          console.log(`Error reading ${trimmedPath} file ...`);
-        } else {
-          res.writeHead(200, {
-            'Content-Type': MIMES.html,
-          });
-          responseContent = msg;
-        }
-      } else {
-        const [err, msg] = await file.readPublic('index.html');
-        if (err) {
-          res.statusCode = 404;
-          console.log(`Error reading ${trimmedPath} file ...`);
-        } else {
-          res.writeHead(200, {
-            'Content-Type': MIMES.html,
-          });
-          responseContent = msg;
-        }
-      }
+      res.writeHead(200, { 'content-type': MIMES.html });
+
+      const pages: Record<string, any> = {
+        '': PageHome,
+        register: PageRegister,
+        '404': Page404,
+      };
+
+      const PageClass = pages[trimmedPath];
+      responseContent = new PageClass().render();
     }
 
     res.end(responseContent);
@@ -132,6 +147,7 @@ export const httpServer = http.createServer(serverLogic);
 export const init = () => {
   console.clear();
   console.log('Server init ...');
+
   httpServer.listen(4409, () => {
     console.log('\nServer running at http://localhost:4409');
   });
