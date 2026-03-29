@@ -1,1 +1,2 @@
-console.log('This is Client JavaScript ...');
+import './register.js';
+import './login.js';

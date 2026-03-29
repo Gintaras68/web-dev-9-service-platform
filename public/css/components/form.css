@@ -1,0 +1,35 @@
+.form,
+.form-login {
+  padding: 20px;
+
+  display: grid;
+  row-gap: 18px;
+  border: 2px solid gainsboro;
+  box-shadow: 0 1px 6px 1px #80808063;
+
+  p {
+    display: inline-block;
+    height: fit-content;
+    margin: 0;
+    color: red;
+    font-style: italic;
+  }
+
+  button {
+    justify-self: center;
+  }
+}
+
+.form-row {
+  width: 100%;
+  display: grid;
+  row-gap: 4px;
+}
+
+.form-row label {
+  font-weight: 700;
+}
+
+.form-row input {
+  padding: 4px;
+}

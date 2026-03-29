@@ -1,9 +1,9 @@
 import PageTemplate from '../lib/PageTemplate.js';
 
-export class PageRegister extends PageTemplate {
+export class PageLogin extends PageTemplate {
   constructor() {
     super();
-    this.pageTitle = 'Register';
+    this.pageTitle = 'Login';
     this.pageStyle = 'register';
   }
 
@@ -11,13 +11,7 @@ export class PageRegister extends PageTemplate {
     return `<main>
               <section class="inner-hero">HERRO</section>
               <section class="section-form">
-                <form action="/api/register" method="post" class="form">
-                  <div class="form-row" data-state>
-                    <label for="name">Username</label>
-                    <input type="text" name="name" id="name" placeholder="Letters only between 4...20 symbols" required />
-                    <p id="nameError"><br></p>
-                  </div>
-
+                <form action="/api/login" method="post" class="form-login">
                   <div class="form-row" data-state>
                     <label for="email">Email</label>
                     <input type="email" name="email" id="email" placeholder="Example: username@mail.com" required />
@@ -30,16 +24,10 @@ export class PageRegister extends PageTemplate {
                     <p id="pswdError"><br></p>
                   </div>
 
-                  <div class="form-row" data-state>
-                    <label for="pswd2">Repeat password</label>
-                    <input type="password" name="pswd2" id="pswd2" placeholder="Repeat the password" />
-                    <p id="pswd2Error"><br></p>
-                  </div>
-
                   <button class="btn" type="submit">Register now!</button>
                 </form>
               </section>
             </main>`;
   }
 }
-export default PageRegister;
+export default PageLogin;

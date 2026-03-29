@@ -4,6 +4,7 @@ import { StringDecoder } from 'node:string_decoder';
 import { PageHome } from '../pages/PageHome.js';
 import { Page404 } from '../pages/Page404.js';
 import { PageRegister } from '../pages/PageRegister.js';
+import { PageLogin } from '../pages/PageLogin.js';
 export const serverLogic = async (
   req: IncomingMessage,
   res: ServerResponse,
@@ -86,63 +87,39 @@ export const serverLogic = async (
     }
     if (isAPI) {
       buffer += stringDecoder.end();
-      const gotData = buffer ? JSON.parse(buffer) : {};
+      const jsonData = buffer ? JSON.parse(buffer) : {};
+
+      // create file ...
       const [err, msg] = await file.create(
         'users',
-        gotData.email + '.json',
-        gotData,
+        jsonData.email + '.json',
+        jsonData,
       );
       if (err) {
         responseContent = msg.toString();
       } else {
-        responseContent = `User ${gotData.name} created.`;
+        responseContent = `User created.`;
+      }
+
+      if (trimmedPath === 'api/login') {
+        console.log('We need to try login', jsonData);
+      }
+
+      if (trimmedPath === 'api/register') {
+        console.log('We need to register new user \n', jsonData);
       }
     }
-    // if (isPage) {
-    //   responseContent = 'HTML file ...';
-    //   if (trimmedPath) {
-    //     const [err, msg] = await file.readPublic(trimmedPath + '.html');
-    //     if (err) {
-    //       res.statusCode = 404;
-    //       console.log(`Error reading ${trimmedPath} file ...`);
-    //     } else {
-    //       res.writeHead(200, {
-    //         'Content-Type': MIMES.html,
-    //       });
-    //       responseContent = msg;
-    //     }
-    //   } else {
-    //     const [err, msg] = await file.readPublic('index.html');
-    //     if (err) {
-    //       res.statusCode = 404;
-    //       console.log(`Error reading ${trimmedPath} file ...`);
-    //     } else {
-    //       res.writeHead(200, {
-    //         'Content-Type': MIMES.html,
-    //       });
-    //       responseContent = msg;
-    //     }
-    //   }
-    // }
 
     if (isPage) {
       res.writeHead(200, { 'content-type': MIMES.html });
 
-      const pages: Record<string, any> = {
-        '': PageHome,
-        register: PageRegister,
-        '404': Page404,
-      };
-
-      const PageClass = pages[trimmedPath];
+      const PageClass = pages[trimmedPath] ? pages[trimmedPath] : pages['404'];
       responseContent = new PageClass().render();
     }
 
     res.end(responseContent);
   });
 };
-
-export const httpServer = http.createServer(serverLogic);
 
 export const init = () => {
   console.clear();
@@ -153,9 +130,19 @@ export const init = () => {
   });
 };
 
+export const httpServer = http.createServer(serverLogic);
+
+export const pages: Record<string, any> = {
+  '': PageHome,
+  register: PageRegister,
+  login: PageLogin,
+  '404': Page404,
+};
+
 export const server = {
   init,
   httpServer,
+  pages,
 };
 
 export default server;
