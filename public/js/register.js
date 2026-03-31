@@ -45,7 +45,7 @@ if (formDOM) {
         body: JSON.stringify({
           username: usernameDOM.value,
           email: emailDOM.value,
-          pass: passDOM.value,
+          password: passDOM.value,
         }),
       });
 

@@ -2,9 +2,13 @@ import http, { IncomingMessage, ServerResponse } from 'node:http';
 import { file } from './file.js';
 import { StringDecoder } from 'node:string_decoder';
 import { PageHome } from '../pages/PageHome.js';
+import { PageServices } from '../pages/PageServices.js';
 import { Page404 } from '../pages/Page404.js';
 import { PageRegister } from '../pages/PageRegister.js';
 import { PageLogin } from '../pages/PageLogin.js';
+import { registerAPI } from '../api/register.js';
+
+
 export const serverLogic = async (
   req: IncomingMessage,
   res: ServerResponse,
@@ -12,6 +16,7 @@ export const serverLogic = async (
   // nustatomas užklausos tekstas
   const baseURL: string = `http://${req.headers.host}`;
   const parsedURL = new URL(req.url ?? '', baseURL);
+  const httpMethod = req.method?.toLowerCase() ?? 'get';
   const trimmedPath = parsedURL.pathname
     .replace(/^\/+|\/+$/g, '')
     .replace(/\/\/+/g, '/');
@@ -87,28 +92,28 @@ export const serverLogic = async (
     }
     if (isAPI) {
       buffer += stringDecoder.end();
-      const jsonData = buffer ? JSON.parse(buffer) : {};
+      let jsonData =  {};
+      try {
+        jsonData = JSON.parse(buffer);
+        
+      } catch (error) { 
+        console.log("Failed parsing JSON");
+        
+      }
 
-      // create file ...
-      const [err, msg] = await file.create(
-        'users',
-        jsonData.email + '.json',
-        jsonData,
-      );
-      if (err) {
-        responseContent = msg.toString();
+      const [, endpoint, ...restUrlParts] = trimmedPath.split('/') as [string, string, string[]];
+      const apiFunction = apiEndpoints[endpoint];
+      
+      if (apiFunction) {
+        console.log("Call a function\n------------");        
+        responseContent = await apiFunction(httpMethod, restUrlParts, jsonData);        
       } else {
-        responseContent = `User created.`;
-      }
-
-      if (trimmedPath === 'api/login') {
-        console.log('We need to try login', jsonData);
-      }
-
-      if (trimmedPath === 'api/register') {
-        console.log('We need to register new user \n', jsonData);
+        console.log("Return info ...");
+        responseContent = "TOKS API ENDPOINTAS NEEGZISTUOJA !";
       }
     }
+
+    
 
     if (isPage) {
       res.writeHead(200, { 'content-type': MIMES.html });
@@ -121,10 +126,11 @@ export const serverLogic = async (
   });
 };
 
+
 export const init = () => {
   console.clear();
   console.log('Server init ...');
-
+  
   httpServer.listen(4409, () => {
     console.log('\nServer running at http://localhost:4409');
   });
@@ -134,9 +140,15 @@ export const httpServer = http.createServer(serverLogic);
 
 export const pages: Record<string, any> = {
   '': PageHome,
-  register: PageRegister,
-  login: PageLogin,
+  'services': PageServices,
+  'register': PageRegister,
+  'login': PageLogin,
   '404': Page404,
+};
+
+export const apiEndpoints: Record<string, any> = {
+  'register': registerAPI,
+  'login': () => 'login API response ...',
 };
 
 export const server = {
