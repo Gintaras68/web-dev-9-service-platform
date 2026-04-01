@@ -31,8 +31,7 @@ api.post = async (restUrlParts: string, jsonData: any): Promise<string> => {
   const [userErr, userMsg] = await file.create('users', jsonData.email + '.json', jsonData);
   if (userErr) {
     return 'User with this email already exist.';
-  }
-
+  } 
 
   console.log("register API response ... User created.");
   return 'register API response ... User created.';

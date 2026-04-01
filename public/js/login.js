@@ -13,7 +13,6 @@ if (formDOM) {
   formDOM.addEventListener('submit', async (e) => {
     e.preventDefault();
     submitDOM.disabled = true;
-    console.log('pressed ..');
 
     // validate data (three functions)
     const [eErr, eMsg] = isValidEmail(emailDOM.value);
@@ -30,17 +29,21 @@ if (formDOM) {
       // nera klaidu - galima formuoti objekta ir isusti i serveri uzklausa
       console.log(`Send ${formDOM.method} message to ${formDOM.action}`);
 
-      const response = await fetch(formDOM.action, {
-        method: formDOM.method,
-        body: JSON.stringify({
-          email: emailDOM.value,
-          pass: passDOM.value,
-        }),
-      });
-      console.log('Waiting ...');
-
-      const responseData = await response.json();
-      console.log(responseData);
+      try {
+        const response = await fetch(formDOM.action, {
+          method: formDOM.method,
+          body: JSON.stringify({
+            email: emailDOM.value,
+            password: passDOM.value,
+          }),
+        });
+        console.log('Waiting ...');  
+        const responseData = await response.json();
+        console.log(responseData);        
+      } catch (error) {
+        console.log("Got error ... sending data", error);        
+        submitDOM.disabled = false;        
+      }
 
       submitDOM.disabled = false;
     }

@@ -6,7 +6,9 @@ import { PageServices } from '../pages/PageServices.js';
 import { Page404 } from '../pages/Page404.js';
 import { PageRegister } from '../pages/PageRegister.js';
 import { PageLogin } from '../pages/PageLogin.js';
+import { PageAccount  } from '../pages/PageAccount.js';
 import { registerAPI } from '../api/register.js';
+import { loginAPI } from '../api/login.js';
 
 
 export const serverLogic = async (
@@ -77,6 +79,7 @@ export const serverLogic = async (
         responseContent = msg;
       }
     }
+
     if (isBinaryFile) {
       console.log(`Uzklausa: ${trimmedPath} => isBinaryFile`);
       const [err, msg] = await file.readPublicBinary(trimmedPath);
@@ -90,8 +93,15 @@ export const serverLogic = async (
         responseContent = msg;
       }
     }
+
     if (isAPI) {
       buffer += stringDecoder.end();
+
+      res.writeHead(200, {
+        'content-type': MIMES.json,
+        'set-cookie': ''
+      });
+
       let jsonData =  {};
       try {
         jsonData = JSON.parse(buffer);
@@ -111,21 +121,20 @@ export const serverLogic = async (
         console.log("Return info ...");
         responseContent = "TOKS API ENDPOINTAS NEEGZISTUOJA !";
       }
-    }
 
-    
+      responseContent = JSON.stringify(responseContent);
+    }
 
     if (isPage) {
       res.writeHead(200, { 'content-type': MIMES.html });
 
-      const PageClass = pages[trimmedPath] ? pages[trimmedPath] : pages['404'];
+      const PageClass = publicPages[trimmedPath] ? publicPages[trimmedPath] : publicPages['404'];
       responseContent = new PageClass().render();
     }
 
     res.end(responseContent);
   });
 };
-
 
 export const init = () => {
   console.clear();
@@ -138,7 +147,7 @@ export const init = () => {
 
 export const httpServer = http.createServer(serverLogic);
 
-export const pages: Record<string, any> = {
+export const publicPages: Record<string, any> = {
   '': PageHome,
   'services': PageServices,
   'register': PageRegister,
@@ -146,15 +155,20 @@ export const pages: Record<string, any> = {
   '404': Page404,
 };
 
+export const protectedPages: Record<string, any> = {
+  'account': PageAccount,
+};
+
 export const apiEndpoints: Record<string, any> = {
   'register': registerAPI,
-  'login': () => 'login API response ...',
+  'login': loginAPI,
 };
 
 export const server = {
   init,
   httpServer,
-  pages,
+  publicPages,
+  protectedPages,
 };
 
 export default server;
