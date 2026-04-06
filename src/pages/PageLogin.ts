@@ -7,9 +7,15 @@ export class PageLogin extends PageTemplate {
     this.pageStyle = 'register';
   }
 
+  hero() {
+    return `<section class="hero">
+              <h1>Login</h1>
+            </section>`;
+  }
+
   main() {
     return `<main>
-              <section class="inner-hero">HERRO</section>
+               ${this.hero()}
               <section class="section-form">
                 <form action="/api/login" method="post" class="form-login">
                   <div class="form-row" data-state>

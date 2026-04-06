@@ -7,17 +7,16 @@ export class PageAccount extends PageTemplate {
     this.pageTitle = 'Account';
   }
 
-  private heroHTML() {
-    return `
-          <section>
-            <h1 class="main-title">Account</h1>            
-          </section>`;
+  hero() {
+    return `<section class="hero">
+              <h1>Account</h1>
+            </section>`;
   }
 
   main() {
     return `<main>
-            ${this.heroHTML()}
-            <p>Welcom to user account page! </p>
+              ${this.hero()}
+              <p>Welcom to user account page! </p>
             </main>`;
   }
 }

@@ -9,13 +9,16 @@ import { PageLogin } from '../pages/PageLogin.js';
 import { PageAccount  } from '../pages/PageAccount.js';
 import { registerAPI } from '../api/register.js';
 import { loginAPI } from '../api/login.js';
+import { cookieParser, isUserLoggedIn } from './utils.js';
 
+export type APIresponse = {
+  statusCode: number;
+  headers: Record<string, any>;
+  body: string | undefined;
+};
 
-export const serverLogic = async (
-  req: IncomingMessage,
-  res: ServerResponse,
-) => {
-  // nustatomas užklausos tekstas
+export const serverLogic = async ( req: IncomingMessage, res: ServerResponse ) => {
+  // nustatomas užklausos tekstas (URL)
   const baseURL: string = `http://${req.headers.host}`;
   const parsedURL = new URL(req.url ?? '', baseURL);
   const httpMethod = req.method?.toLowerCase() ?? 'get';
@@ -57,7 +60,8 @@ export const serverLogic = async (
   const isPage = !isTextFile && !isBinaryFile && !isAPI;
 
   // formuojame atsakymą atsižvelgiant kokia gauta užklausa
-  let responseContent: string | Buffer = '';
+  let responseContent: string | Buffer | undefined = '';
+  let responseStatusCode = 200;
   let buffer = '';
   const stringDecoder = new StringDecoder('utf-8');
 
@@ -67,13 +71,11 @@ export const serverLogic = async (
 
   req.on('end', async () => {
     if (isTextFile) {
-      console.log(`Uzklausa: ${trimmedPath} => isTextFile`);
       const [err, msg] = await file.readPublic(trimmedPath);
       if (err) {
         res.statusCode = 404;
-        console.log(`Error reading ${trimmedPath} file ...`);
       } else {
-        res.writeHead(200, {
+        res.writeHead(responseStatusCode, {
           'Content-Type': MIMES[extension],
         });
         responseContent = msg;
@@ -81,13 +83,11 @@ export const serverLogic = async (
     }
 
     if (isBinaryFile) {
-      console.log(`Uzklausa: ${trimmedPath} => isBinaryFile`);
       const [err, msg] = await file.readPublicBinary(trimmedPath);
       if (err) {
         res.statusCode = 404;
-        console.log(`Error reading ${trimmedPath} file ...`);
       } else {
-        res.writeHead(200, {
+        res.writeHead(responseStatusCode, {
           'Content-Type': MIMES[extension],
         });
         responseContent = msg;
@@ -97,12 +97,9 @@ export const serverLogic = async (
     if (isAPI) {
       buffer += stringDecoder.end();
 
-      res.writeHead(200, {
-        'content-type': MIMES.json,
-        'set-cookie': ''
-      });
-
+      const baseHeaders = { 'Content-Type': MIMES.json, };
       let jsonData =  {};
+      let apiRes = {} as APIresponse;
       try {
         jsonData = JSON.parse(buffer);
         
@@ -116,19 +113,48 @@ export const serverLogic = async (
       
       if (apiFunction) {
         console.log("Call a function\n------------");        
-        responseContent = await apiFunction(httpMethod, restUrlParts, jsonData);        
+        apiRes = await apiFunction(httpMethod, restUrlParts, jsonData) as APIresponse;        
       } else {
-        console.log("Return info ...");
-        responseContent = "TOKS API ENDPOINTAS NEEGZISTUOJA !";
+        apiRes = {
+          statusCode: 200,
+          headers: {},
+          body: "TOKS API ENDPOINTAS NEEGZISTUOJA !"
+        }
       }
 
-      responseContent = JSON.stringify(responseContent);
+      
+      res.writeHead(apiRes.statusCode, {
+        ...baseHeaders,
+        ...apiRes.headers
+      });
+
+      responseContent = JSON.stringify(apiRes.body);
     }
 
     if (isPage) {
-      res.writeHead(200, { 'content-type': MIMES.html });
+      res.writeHead(responseStatusCode, { 'content-type': MIMES.html });
 
-      const PageClass = publicPages[trimmedPath] ? publicPages[trimmedPath] : publicPages['404'];
+      const cookiesObj: Record<string, string> = cookieParser(req.headers.cookie ?? '');
+
+      
+      const isLoggedIn = await isUserLoggedIn(cookiesObj['session-token']);
+
+      if (isLoggedIn) {
+        console.log("Tokenas 'session-token': ", cookiesObj['session-token'], ">> vatotojas prisijungęs");
+      } else {
+        console.log("Tokenas 'session-token': ", cookiesObj['session-token'], ">> vatotojas nėra prisijungęs.");
+      }
+
+      let PageClass = publicPages['404'];
+
+      if (isLoggedIn && trimmedPath in protectedPages) {
+        PageClass = protectedPages[trimmedPath];
+      }
+
+      if (trimmedPath in publicPages) {
+        PageClass = publicPages[trimmedPath];
+      }
+
       responseContent = new PageClass().render();
     }
 

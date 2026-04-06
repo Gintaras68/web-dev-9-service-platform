@@ -37,12 +37,19 @@ export class PageTemplate {
             </header>`;
   }
 
+  hero() {
+    return `<section class="hero">
+              <h1>section Hero</h1>
+            </section>`;
+  }
+
   footer() {
     return `<footer>FOOTER TEMPLATE</footer>`;
   }
 
   main() {
     return `<main>
+              ${this.hero()}
               PAGE TEMPLATE
             </main>`;
   }

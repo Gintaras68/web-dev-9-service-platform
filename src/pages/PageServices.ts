@@ -7,9 +7,16 @@ export class PageServices extends PageTemplate {
     this.pageTitle = 'Services';
   }
 
+  hero() {
+    return `<section class="hero">
+              <h1>Services</h1>
+            </section>`;
+  }
+
   main() {
     return `<main>
-              <h1>This is Services page</h1>
+               ${this.hero()}
+              <h2>cards with services ...</h2>
             </main>`;
   }
 }
