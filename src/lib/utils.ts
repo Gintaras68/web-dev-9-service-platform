@@ -31,3 +31,35 @@ export async function isUserLoggedIn(tokenString: string | undefined): Promise<b
 
   return true;
 }
+
+/**
+ * 
+ * @param checkInterval - laikas minutėmis (t. y. dar *60*1000)
+ */
+export async function deleteOldTokens(checkInterval: number) {
+  const dir: string  = 'token';
+  const currentTime = new Date().getTime();
+  
+  const [err, list] = await file.list(dir);
+  if (err) {
+    console.log("Klaida ieskant katalogo ...");      
+  }
+  console.log("Kataloge /.data/token/ randasi:\n", list);  
+
+  for (const fileName of list) {
+    if (fileName.includes('.json')) {
+      // nuskaitome failą ir patikriname jo galiojimą
+      const [err, content] = await file.read(dir, fileName)
+      const tokenObj = JSON.parse(content as string); 
+      
+      if (currentTime - tokenObj.createdAt > checkInterval * 60 * 1000) {
+        console.log(fileName, " metas trinti ...");        
+        await file.delete('token', fileName);      
+      }
+
+    }    
+  }
+}
+
+
+

@@ -2,12 +2,25 @@ body {
   margin: 0;
 }
 
+.container {
+  max-width: 630px;
+  padding: 0 15px;
+  width: 100%;
+  margin: 0 auto;
+}
+
 .section-form {
   max-width: 400px;
   margin: 40px auto;
+}
+
+.section-title {
+  text-align: center;
 }
 
 .hero {
   padding: 20px;
   background-color: gainsboro;
 }
+
+

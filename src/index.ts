@@ -1,4 +1,6 @@
+// import { file } from './lib/file.js';
 import { server } from './lib/server.js';
+import { deleteOldTokens } from './lib/utils.js';
 
 console.clear();
 
@@ -7,12 +9,16 @@ export const initialFilesStructure = () => {
   console.log("Creating files...");  
 }
 
-export const init = () => {
+export const  init = () => {
   console.log('App init ...');
   server.init();
+  
+  // išvalyti nebegaliojančius /data/token/*.json failus
+  // para: 24*60*60*1000 milisekundžių
+  const checkInterval: number = 60; // in minutes
   setInterval(() => {
-    // išvalyti nebegaliojančisu /data/token/*.json failus
-  }, 24*60*60*1000);
+    deleteOldTokens(checkInterval);
+  }, checkInterval*60*1000);
 };
 
 export const app = {
@@ -21,3 +27,5 @@ export const app = {
 };
 
 app.init();
+
+ 

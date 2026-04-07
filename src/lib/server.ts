@@ -135,8 +135,6 @@ export const serverLogic = async ( req: IncomingMessage, res: ServerResponse ) =
       res.writeHead(responseStatusCode, { 'content-type': MIMES.html });
 
       const cookiesObj: Record<string, string> = cookieParser(req.headers.cookie ?? '');
-
-      
       const isLoggedIn = await isUserLoggedIn(cookiesObj['session-token']);
 
       if (isLoggedIn) {

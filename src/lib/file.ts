@@ -24,6 +24,7 @@ type File = {
     content: any,
   ) => Promise<[boolean, string | Error]>;
   delete: (dir: string, fileName: string) => Promise<[boolean, string | Error]>;
+  list: (dir: string) => Promise<[boolean, string[] | Error]>;
 };
 
 const file = {} as File;
@@ -159,6 +160,21 @@ file.delete = async (
     return [false, 'OK'];
   } catch (error) {
     return [true, error] as [boolean, Error];
+  }
+};
+
+/**
+ * Failų sąrašo kataloge pateikimas
+ * @param {string} dir Sub-folder'is esantis .data folder'yje.
+ * @returns {Promise<[boolean, string | Error]>} Pozymis, ar funkcija sekmingai rado kFaiaaaatalogą.
+ */
+file.list = async (dir: string) => {
+  try {
+    const filePath = file.fullPath(dir, '');
+    const files = await fs.readdir(filePath);
+    return [false, files];
+  } catch (error) {
+    return [true, error as Error];
   }
 };
 
