@@ -43,6 +43,7 @@ if (formDOM) {
       const response = await fetch(formDOM.action, {
         method: formDOM.method,
         body: JSON.stringify({
+          // method: 'DELETE',
           username: usernameDOM.value,
           email: emailDOM.value,
           password: passDOM.value,

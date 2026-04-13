@@ -1,21 +1,38 @@
 import http, { IncomingMessage, ServerResponse } from 'node:http';
-import { file } from './file.js';
 import { StringDecoder } from 'node:string_decoder';
+import { Connection } from 'mysql2/promise';
+import { file } from './file.js';
+import { cookieParser, isUserLoggedIn } from './utils.js';
+// PAGES
 import { PageHome } from '../pages/PageHome.js';
 import { PageServices } from '../pages/PageServices.js';
 import { Page404 } from '../pages/Page404.js';
 import { PageRegister } from '../pages/PageRegister.js';
 import { PageLogin } from '../pages/PageLogin.js';
 import { PageAccount  } from '../pages/PageAccount.js';
+//API
 import { registerAPI } from '../api/register.js';
 import { loginAPI } from '../api/login.js';
-import { cookieParser, isUserLoggedIn } from './utils.js';
+import { servicesAPI } from '../api/services.js';
+
+let dbConnection = {} as Connection;
 
 export type APIresponse = {
   statusCode: number;
   headers: Record<string, any>;
   body: string | undefined;
 };
+
+export type DataForHandlers = {
+  dbConnection: Connection,
+  httpMethod: string,
+  trimmedPath: string,
+  payload: any,
+  user: {
+    email: string,
+    isLoggedIn: boolean,
+  },
+}
 
 export const serverLogic = async ( req: IncomingMessage, res: ServerResponse ) => {
   // nustatomas užklausos tekstas (URL)
@@ -70,6 +87,26 @@ export const serverLogic = async ( req: IncomingMessage, res: ServerResponse ) =
   });
 
   req.on('end', async () => {
+    buffer += stringDecoder.end();
+    let jsonData =  {};
+    try {
+      jsonData = JSON.parse(buffer);        
+    } catch (error) { 
+      // console.log("Failed parsing JSON");        
+    }
+
+    const dataForHandlers: DataForHandlers = {
+      dbConnection,
+      httpMethod,
+      trimmedPath,
+      payload: jsonData,
+      user: {
+        email: '',
+        isLoggedIn: false,
+      },
+    }
+    
+    
     if (isTextFile) {
       const [err, msg] = await file.readPublic(trimmedPath);
       if (err) {
@@ -95,25 +132,15 @@ export const serverLogic = async ( req: IncomingMessage, res: ServerResponse ) =
     }
 
     if (isAPI) {
-      buffer += stringDecoder.end();
-
       const baseHeaders = { 'Content-Type': MIMES.json, };
-      let jsonData =  {};
       let apiRes = {} as APIresponse;
-      try {
-        jsonData = JSON.parse(buffer);
-        
-      } catch (error) { 
-        console.log("Failed parsing JSON");
-        
-      }
-
+      
       const [, endpoint, ...restUrlParts] = trimmedPath.split('/') as [string, string, string[]];
       const apiFunction = apiEndpoints[endpoint];
       
       if (apiFunction) {
         console.log("Call a function\n------------");        
-        apiRes = await apiFunction(httpMethod, restUrlParts, jsonData) as APIresponse;        
+        apiRes = await apiFunction(dataForHandlers) as APIresponse;        
       } else {
         apiRes = {
           statusCode: 200,
@@ -160,10 +187,9 @@ export const serverLogic = async ( req: IncomingMessage, res: ServerResponse ) =
   });
 };
 
-export const init = () => {
-  console.clear();
-  console.log('Server init ...');
-  
+export const init = (dbConnectionObj: Connection) => {
+  dbConnection = dbConnectionObj
+
   httpServer.listen(4409, () => {
     console.log('\nServer running at http://localhost:4409');
   });
@@ -185,6 +211,7 @@ export const protectedPages: Record<string, any> = {
 
 export const apiEndpoints: Record<string, any> = {
   'register': registerAPI,
+  'services': servicesAPI,
   'login': loginAPI,
 };
 

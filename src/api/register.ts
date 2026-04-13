@@ -1,15 +1,12 @@
 import { file } from '../lib/file.js';
-import { APIresponse } from '../lib/server.js';
+import { APIresponse, DataForHandlers } from '../lib/server.js';
 
-export async function registerAPI(
-  httpMethod: string,
-  restUrlParts: string[],
-  jsonData: any,
-): Promise<APIresponse> {
+export async function registerAPI(data: DataForHandlers): Promise<APIresponse> {
+  const { httpMethod } = data;
   const availableHttpMethods = ['post'];
 
   if (availableHttpMethods.includes(httpMethod)) {
-    return await api[httpMethod]!(restUrlParts, jsonData);
+    return await api[httpMethod]!(data);
   }
 
   return {
@@ -21,25 +18,24 @@ export async function registerAPI(
 
 const api: Record<string, Function> = {};
 
-api.post = async (
-  restUrlParts: string,
-  jsonData: any,
-): Promise<APIresponse> => {
-  if (typeof jsonData.email !== 'string' || jsonData.email === '') {
+api.post = async (data: DataForHandlers): Promise<APIresponse> => {
+  const { dbConnection, payload } = data;
+
+  if (typeof payload.email !== 'string' || payload.email === '') {
     return {
       statusCode: 422,
       headers: {},
       body: 'Email has to be non-empty text',
     };
   }
-  if (typeof jsonData.username !== 'string' || jsonData.username === '') {
+  if (typeof payload.username !== 'string' || payload.username === '') {
     return {
       statusCode: 422,
       headers: {},
       body: 'Username has to be non-empty text',
     };
   }
-  if (typeof jsonData.password !== 'string' || jsonData.password === '') {
+  if (typeof payload.password !== 'string' || payload.password === '') {
     return {
       statusCode: 422,
       headers: {},
@@ -47,7 +43,7 @@ api.post = async (
     };
   }
 
-  const keys = Object.keys(jsonData); // gauname masyvą su objekto raktais
+  const keys = Object.keys(payload); // gauname masyvą su objekto raktais
   if (keys.length > 3) {
     return {
       statusCode: 422,
@@ -56,14 +52,14 @@ api.post = async (
     };
   }
 
-  const [userErr, userMsg] = await file.create( 'users', jsonData.email + '.json', jsonData );
-  if (userErr) {
-    return {
-      statusCode: 409,
-      headers: {},
-      body: 'User with this email already registered.',
-    };
+  const queryString =`INSERT INTO users (username, email, password) 
+                      VALUES ('${payload.username}', '${payload.email}', '${payload.password}')`;
+  try {
+    await dbConnection.query(queryString);
+  } catch (err) {
+    console.log(err);
   }
+
 
   console.log('register API response ... User created.');
   return {
@@ -72,3 +68,4 @@ api.post = async (
     body: 'User created.',
   };
 };
+
