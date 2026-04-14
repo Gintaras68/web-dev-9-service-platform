@@ -51,16 +51,26 @@ api.post = async (data: DataForHandlers): Promise<APIresponse> => {
       body: 'Object must have three keys',
     };
   }
-
-  const queryString =`INSERT INTO users (username, email, password) 
-                      VALUES ('${payload.username}', '${payload.email}', '${payload.password}')`;
+  
   try {
+    const [thisEmail, par] = await dbConnection.query(`SELECT * FROM users WHERE email= '${payload.email}'`);
+    if (thisEmail.length) {
+      console.log("Jau yra toks vartotojas");
+      return {
+        statusCode: 303,
+        headers: {},
+        body: 'This email address already in use.',
+      };  
+    }
+
+    const queryString =`INSERT INTO users (username, email, password) 
+        VALUES ('${payload.username}', '${payload.email}', '${payload.password}')`;
     await dbConnection.query(queryString);
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    console.log(error);    
   }
-
-
+  
+  
   console.log('register API response ... User created.');
   return {
     statusCode: 201,
@@ -69,3 +79,4 @@ api.post = async (data: DataForHandlers): Promise<APIresponse> => {
   };
 };
 
+ 
