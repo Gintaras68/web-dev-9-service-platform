@@ -18,8 +18,9 @@ export async function loginAPI(data: DataForHandlers): Promise<APIresponse> {
 const api: Record<string, Function> = {};
 
 api.post = async (data: DataForHandlers): Promise<APIresponse> => {
-  const { payload } = data;
+  const { dbConnection, payload } = data;
 
+// -------   tikrinami gauti iš naršyklės duomenys ... --------------
   console.log(`api.post - payload: `, payload);
 
   if (typeof payload.email !== 'string' || payload.email === '') {
@@ -38,7 +39,6 @@ api.post = async (data: DataForHandlers): Promise<APIresponse> => {
       body: 'Password has to be non-empty text',
     };
   }
-
   const keys = Object.keys(payload); // gauname masyvą su objekto raktais
   if (keys.length > 2) {
     return {
@@ -48,25 +48,27 @@ api.post = async (data: DataForHandlers): Promise<APIresponse> => {
     };
   }
 
-  const [userErr, userMsg] = await file.read('users', payload.email + '.json');
-  if (userErr) {
-    return {
-      statusCode: 409,
-      headers: {},
-      body: 'Wrong email or/and password.',
-    };
+ 
+  // -----   gauname vartotojo veikiantį slaptažodį (nuskaitom iš duomenų bazės) ----
+  let userObj = {};
+  try {
+    const [data, tb] = await dbConnection.query(`SELECT * FROM users WHERE email='${payload.email}'`);
+    userObj =data[0];
+    console.log("Got user from DB: ", userObj);
+    
+    if (userObj.password !== payload.password) {
+      console.log('Wrong email or/and password.');      
+      return {
+        statusCode: 409,
+        headers: {},
+        body: 'Wrong email or/and password.',
+      };
+    }      
+  } catch (error) {
+    console.log("Error connecting with DB ...");    
   }
 
-  const userObj = JSON.parse(userMsg);
-
-  if (userObj.password !== payload.password) {
-    return {
-      statusCode: 409,
-      headers: {},
-      body: 'Wrong email or/and password.',
-    };
-  }
-
+  // ------   generuojamas tokenas .... ------------------
   const abc = 'qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM0123456789';
   let token = '';
   for (let i = 0; i < 20; i++) {
@@ -74,23 +76,12 @@ api.post = async (data: DataForHandlers): Promise<APIresponse> => {
     token += abc[index];
   }
 
-  const tokenObj = {
-    email: payload.email,
-    createdAt: new Date().getTime(),
-  };
-
-  const [tokenErr, tokenMsg] = await file.create(
-    'token',
-    token + '.json',
-    tokenObj,
-  );
-
-  if (tokenErr) {
-    return {
-      statusCode: 500,
-      headers: {},
-      body: 'Server problem... Please, try again...',
-    };
+  const queryString =`INSERT INTO tokens (email, token, createdAt) 
+        VALUES ('${payload.email}', '${token}', ${new Date().getTime()})`;
+  try {
+    await dbConnection.query(queryString);    
+  } catch (error) {
+    console.log("Klaida iterpiant tokena");    
   }
 
   const timeToDelete = 20;
