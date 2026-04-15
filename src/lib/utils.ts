@@ -1,3 +1,4 @@
+import { Connection } from "mysql2/promise";
 import { file } from "./file.js";
 
 export function cookieParser(string: string): Record<string, string> {
@@ -36,28 +37,22 @@ export async function isUserLoggedIn(tokenString: string | undefined): Promise<b
  * 
  * @param checkInterval - laikas minutėmis (t. y. dar *60*1000)
  */
-export async function deleteOldTokens(checkInterval: number) {
-  const dir: string  = 'token';
+export async function deleteOldTokens(checkInterval: number, dbConnection: Connection) {
   const currentTime = new Date().getTime();
   
-  const [err, list] = await file.list(dir);
-  if (err) {
-    console.log("Klaida ieskant katalogo ...");      
-  }
-  console.log("Kataloge /.data/token/ randasi:\n", list);  
-
-  for (const fileName of list) {
-    if (fileName.includes('.json')) {
-      // nuskaitome failą ir patikriname jo galiojimą
-      const [err, content] = await file.read(dir, fileName)
-      const tokenObj = JSON.parse(content as string); 
-      
-      if (currentTime - tokenObj.createdAt > checkInterval * 60 * 1000) {
-        console.log(fileName, " metas trinti ...");        
-        await file.delete('token', fileName);      
+  // ============   darbas su duomenų baze ...   =============================
+  try {
+    const [list, param] = await dbConnection.query(`SELECT * FROM tokens`);
+    for (const item of list) {
+      const {token, createdAt} = item;
+      if (currentTime - createdAt > checkInterval * 60 * 1000) {
+        console.log(`Tokeną ${token} metas trinti.`);
+        await dbConnection.query(`DELETE FROM tokens WHERE token='${token}'`);
       }
-
     }    
+  } catch (error) {
+    console.log("Klaida nuskaitant tokenus ↓");
+    console.log(error);      
   }
 }
 

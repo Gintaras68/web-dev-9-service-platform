@@ -16,13 +16,14 @@ export const  init = async () => {
 
   try {
     const dbConnection: Connection = await databaseSetup();
+
     server.init(dbConnection);
 
     // išvalyti nebegaliojančius /data/token/*.json failus
     // para: 24*60*60*1000 milisekundžių
     const checkInterval: number = 60; // in minutes
     setInterval(() => {
-      deleteOldTokens(checkInterval);
+      deleteOldTokens(checkInterval, dbConnection);
     }, checkInterval*60*1000);
     
   } catch (error) {
