@@ -49,7 +49,8 @@ api.post = async (data: DataForHandlers): Promise<APIresponse> => {
   }
 
  
-  // -----   gauname vartotojo veikiantį slaptažodį (nuskaitom iš duomenų bazės) ----
+  // -----   gauname vartotojo veikiantį slaptažodį     ------
+  // ----------- (nuskaitom iš duomenų bazės)   --------------
   let userObj = {};
   try {
     const [data, tb] = await dbConnection.query(`SELECT * FROM users WHERE email='${payload.email}'`);
@@ -68,14 +69,15 @@ api.post = async (data: DataForHandlers): Promise<APIresponse> => {
     console.log("Error connecting with DB ...");    
   }
 
-  // ------   generuojamas tokenas .... ------------------
+  // ------   generuojamas tokenas .... -------------------------------
   const abc = 'qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM0123456789';
   let token = '';
   for (let i = 0; i < 20; i++) {
     const index = Math.floor(Math.random() * abc.length);
     token += abc[index];
   }
-
+  
+  // -------   tokenas įrašomas į duomenų bazę kartu su e-mailu ir data
   const queryString =`INSERT INTO tokens (email, token, createdAt) 
         VALUES ('${payload.email}', '${token}', ${new Date().getTime()})`;
   try {
@@ -84,8 +86,8 @@ api.post = async (data: DataForHandlers): Promise<APIresponse> => {
     console.log("Klaida iterpiant tokena");    
   }
 
-  const timeToDelete = 20;
-
+  // -------    formuojamas cookie klientui      -------------------------
+  const timeToDelete = 200;
   const cookieString = [
     `session-token=${token}`,
     `HttpOnly`,

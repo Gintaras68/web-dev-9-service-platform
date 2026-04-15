@@ -14,19 +14,31 @@ export function cookieParser(string: string): Record<string, string> {
   return cookiesObj;
 }
 
-export async function isUserLoggedIn(tokenString: string | undefined): Promise<boolean> {
+/**
+ * Tikrina pagal gautą tokeną - ar toks yra duomenų bazėje
+ * @param tokenString token got from user
+ * @returns boolean (true if already have token in DB)
+ */
+export async function isUserLoggedIn(tokenString: string | undefined, dbConnection: Connection): Promise<boolean> {
+
   if (typeof tokenString !== 'string') {
+    console.log("Narsykle be tokeno - toliau neziurime - neprisijungęs");    
     return false;
   }
 
-  const [tokenErr, tokenMsg] = await file.read('token', tokenString + '.json');
-  if (tokenErr) {
+  // =====  database ...    =====================
+  const [list, param] = await dbConnection.query(`SELECT * FROM tokens WHERE token='${tokenString}'`);
+
+  if (list.length === 0) {
+    console.log("Duomenų bazėje nėra saugomas toks tokenas!");    
     return false;
   }
 
-  const {email, createdAt} = JSON.parse(tokenMsg);
-  
-  if (createdAt + 10000 < new Date().getTime()) {
+  const tokenObj = list[0];
+
+  // ------------------    ↓↓ - minutes - galiojimo laikas
+  if (tokenObj.createdAt + 1 * 60000 < new Date().getTime()) {
+    console.log("Baigesi tokeno galiojimas duomenu bazeje ...!");    
     return false
   }
 

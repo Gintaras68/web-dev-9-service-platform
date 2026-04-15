@@ -162,7 +162,7 @@ export const serverLogic = async ( req: IncomingMessage, res: ServerResponse ) =
       res.writeHead(responseStatusCode, { 'content-type': MIMES.html });
 
       const cookiesObj: Record<string, string> = cookieParser(req.headers.cookie ?? '');
-      const isLoggedIn = await isUserLoggedIn(cookiesObj['session-token']);
+      const isLoggedIn = await isUserLoggedIn(cookiesObj['session-token'], dbConnection);
 
       if (isLoggedIn) {
         console.log("Tokenas 'session-token': ", cookiesObj['session-token'], ">> vatotojas prisijungęs");
