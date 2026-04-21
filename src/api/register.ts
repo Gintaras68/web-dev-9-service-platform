@@ -1,4 +1,3 @@
-import { file } from '../lib/file.js';
 import { APIresponse, DataForHandlers } from '../lib/server.js';
 
 export async function registerAPI(data: DataForHandlers): Promise<APIresponse> {
@@ -53,8 +52,10 @@ api.post = async (data: DataForHandlers): Promise<APIresponse> => {
   }
   
   try {
-    const [thisEmail, par] = await dbConnection.query(`SELECT * FROM users WHERE email= '${payload.email}'`);
-    if (thisEmail.length) {
+    const responseData = await dbConnection.query(`SELECT * FROM users WHERE email= '${payload.email}'`);
+    const userList = responseData[0];
+    
+    if (userList.length) {
       console.log("Jau yra toks vartotojas");
       return {
         statusCode: 303,

@@ -1,4 +1,3 @@
-import { file } from '../lib/file.js';
 import { APIresponse, DataForHandlers } from '../lib/server.js';
 
 export async function loginAPI(data: DataForHandlers): Promise<APIresponse> {
@@ -48,13 +47,22 @@ api.post = async (data: DataForHandlers): Promise<APIresponse> => {
     };
   }
 
+  type userObj = {
+    id: number,
+    username: string,
+    email: string,
+    password: string,
+    registeredAt: any
+  }
  
   // -----   gauname vartotojo veikiantį slaptažodį     ------
   // ----------- (nuskaitom iš duomenų bazės)   --------------
-  let userObj = {};
+  let userObj = {} as any | userObj;
   try {
-    const [data, tb] = await dbConnection.query(`SELECT * FROM users WHERE email='${payload.email}'`);
-    userObj =data[0];
+    const responseData = await dbConnection.query(`SELECT * FROM users WHERE email='${payload.email}'`);
+    userObj =responseData[0][0];
+
+    console.log("Got answer DB: ", responseData);
     console.log("Got user from DB: ", userObj);
     
     if (userObj.password !== payload.password) {
@@ -78,8 +86,8 @@ api.post = async (data: DataForHandlers): Promise<APIresponse> => {
   }
   
   // -------   tokenas įrašomas į duomenų bazę kartu su e-mailu ir data
-  const queryString =`INSERT INTO tokens (email, token, createdAt) 
-        VALUES ('${payload.email}', '${token}', ${new Date().getTime()})`;
+  const queryString =`INSERT INTO tokens (email, token) 
+        VALUES ('${payload.email}', '${token}')`;
   try {
     await dbConnection.query(queryString);    
   } catch (error) {
